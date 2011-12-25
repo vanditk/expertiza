@@ -1,10 +1,13 @@
 class Assessment360Controller < ApplicationController
-
+  # Added the @instructor to display the instrucor name in the home page of the 360 degree assessment
   def index
     @courses = Course.find_all_by_instructor_id(session[:user].id)
+    @instructor_id = session[:user].id
+    @instructor = User.find_by_id(@instructor_id)
   end
 
   def one_course_all_assignments
+    puts "inside one course all assignment"
     #@REVIEW_TYPES = ["ParticipantReviewResponseMap", "FeedbackResponseMap", "TeammateReviewResponseMap", "MetareviewResponseMap"]
     @REVIEW_TYPES = ["TeammateReviewResponseMap"]
     @course = Course.find_by_id(params[:course_id])
@@ -15,7 +18,7 @@ class Assessment360Controller < ApplicationController
     @assignment_bar_charts = Hash.new
     @assignment_distribution  = Hash.new
 
-    @assignments.each do |assignment|     
+    @assignments.each do |assignment|
       # Pie Chart Data .....................................
       reviewed = assignment.get_percentage_reviews_completed()
       pending = 100 - reviewed
@@ -113,6 +116,99 @@ class Assessment360Controller < ApplicationController
     end
   end
 
+# Find the list of all students and assignments pertaining to the course. This data is used to compute the metareview and teammate review scores. This information is used in the view.
+  def all_students_all_reviews
+     @course = Course.find_by_id(params[:course_id])
+     @students = @course.get_participants()
+     @assignments = Assignment.find_all_by_course_id(@course.id);
+  end
+
+# Find all the assignments for a given student pertaining to the course. This data is given a graphical display using bar charts. Individual teammate and metareview scores are displayed along with their aggregate
+  def one_student_all_reviews
+
+    @course = Course.find_by_id(params[:course_id])
+    @students = @course.get_participants()
+    @students.each { |student|
+       if student.id.to_s == params[:student_id].to_s
+         @current_student = student
+         break
+       end
+    }
+    @assignments = Assignment.find_all_by_course_id(@course.id);
+
+    colors = Array.new
+    colors << '0000ff'
+    colors << '00ff00'
+    colors << 'ff0000'
+    colors << 'ff00ff'
+    colors << '00ffff'
+    colors << 'ffff00'
+    colors << '0f0f0f'
+    colors << 'f0f0f0'
+    colors << 'f00f00'
+    colors << 'f0f00f'
+    colors << 'ff000f'
+    min = 0
+    max = 100
+    GoogleChart::BarChart.new("600x350"," ",:horizontal,false) do |bc|
+     bc.data " ", [100], 'ffffff'
+     bc.axis :x, :range => [min,max]
+     i = 0
+     @assignments.each do |assignment|
+       assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
+       if  !assignment_participant.nil?
+       teammate_scores = assignment_participant.get_teammate_reviews()
+       meta_scores = assignment_participant.get_metareviews()
+       j = 1.to_i
+       average = 0;
+       if !teammate_scores.nil?
+         teammate_scores.each do |teammate_score|
+            average = average +   teammate_score.get_average_score
+            bc.data assignment.name.to_s + ", Scores: " + teammate_score.get_average_score.to_s, [teammate_score.get_average_score], colors[i]
+            j = j + 1
+         end
+         if( (j-1).to_i > 0)
+            average = average.to_i / (j-1).to_i
+            bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+         end
+       end
+       i = i +1
+     end
+     puts "\nBar Chart"
+     @bc= bc.to_url
+     end
+    end
+
+     GoogleChart::BarChart.new("600x350"," ",:horizontal,false) do |bc|
+     bc.data " ", [100], 'ffffff'
+     bc.axis :x, :range => [min,max]
+     i = 0
+     @assignments.each do |assignment|
+       assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
+       if  !assignment_participant.nil?
+       meta_scores = assignment_participant.get_metareviews()
+       j = 1.to_i
+       average = 0;
+       if !meta_scores.nil?
+         meta_scores.each do |meta_score|
+            average = average +   meta_score.get_average_score
+            bc.data assignment.name.to_s + ", Scores ".to_s +  meta_score.get_average_score.to_s, [meta_score.get_average_score], colors[i]
+            j = j + 1
+         end
+        if( (j-1).to_i > 0)
+            average = average.to_i / (j-1).to_i
+            bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+        end
+
+       end
+       i = i +1
+     end
+     puts "\nBar Chart"
+     @mt= bc.to_url
+     end
+    end
+  end
+
   def one_assignment_one_student
     @assignment = Assignment.find_by_id(params[:assignment_id])
     @participant = Participant.find_by_user_id(params[:user_id])
@@ -124,7 +220,7 @@ class Assessment360Controller < ApplicationController
     min=0
     max=100
 
-    GoogleChart::BarChart.new("300x80", " ", :horizontal, false) do |bc|
+    GoogleChart::BarChart.new("500x100", " ", :horizontal, false) do |bc|
       bc.data " ", [100], 'ffffff'
       bc.data "Student", bar_1_data, color_1
       bc.data "Class Average", bar_2_data, color_2

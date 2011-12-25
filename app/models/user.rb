@@ -59,18 +59,9 @@ class User < ActiveRecord::Base
     end
   end
 
+  # Function which has a MailerHelper which sends the mail welcome email to the user after signing up
   def email_welcome
-    Mailer.deliver_message(
-        {:recipients => self.email,
-         :subject => "Your Expertiza account has been created",
-         :body => {
-           :user => self,
-           :password => clear_password, #FIXME
-           :first_name => ApplicationHelper::get_user_first_name(self),
-           :partial_name => "user_welcome"
-         }
-        }
-    )
+    MailerHelper::send_mail_to_user(self, "Your Expertiza password has been created", "user_welcome", clear_password)
   end
 
   def check_password(clear_password)
@@ -78,21 +69,11 @@ class User < ActiveRecord::Base
     Authlogic::CryptoProviders::Sha1.matches?(password, *[self.password_salt.to_s + clear_password])
   end
 
-  # Generate email to user with new password
-  def reset_and_mail_password
-    self.reset_password!
-    
-    Mailer.deliver_message(
-        {:recipients => self.email,
-         :subject => "Your Expertiza password has been reset",
-         :body => {
-           :user => self,
-           :password => clear_password,
-           :first_name => ApplicationHelper::get_user_first_name(self),
-           :partial_name => "send_password"
-         }
-        }
-    )
+  # Resets the password to be mailed to the user
+  def reset_password
+    randomize_password
+    save
+    clear_password
   end
 
   def self.random_password(size=8)
@@ -207,6 +188,62 @@ class User < ActiveRecord::Base
     @email_on_review = true
     @email_on_submission = true
     @email_on_review_of_review = true
+  end
+
+  def self.export(csv, parent_id, options)
+    users = User.find(:all)
+    users.each {|user|
+      tcsv = Array.new
+      if (options["personal_details"] == "true")
+        tcsv.push(user.name, user.fullname, user.email)
+      end
+      if (options["role"] == "true")
+        tcsv.push(user.role.name)
+      end
+      if (options["parent"] == "true")
+        tcsv.push(user.parent.name)
+      end
+      if (options["email_options"] == "true")
+        tcsv.push(user.email_on_submission, user.email_on_review, user.email_on_review_of_review)
+      end
+      if (options["handle"] == "true")
+        tcsv.push(user.handle)
+      end
+      csv << tcsv
+    }
+  end
+
+  def self.get_export_fields(options)
+    fields = Array.new
+    if (options["personal_details"] == "true")
+      fields.push("name", "full name", "email")
+    end
+    if (options["role"] == "true")
+      fields.push("role")
+    end
+    if (options["parent"] == "true")
+      fields.push("parent")
+    end
+    if (options["email_options"] == "true")
+      fields.push("email on submission", "email on review", "email on metareview")
+    end
+    if (options["handle"] == "true")
+      fields.push("handle")
+    end
+    return fields
+  end
+
+  def self.from_params(params)
+      if params[:user_id]
+        user = User.find(params[:user_id])
+      else
+        user = User.find_by_name(params[:user][:name])
+      end
+      if user.nil?
+         newuser = url_for :controller => 'users', :action => 'new'
+         raise "Please <a href='#{newuser}'>create an account</a> for this user to continue."
+      end
+      return user
   end
 
 end

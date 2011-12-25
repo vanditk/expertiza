@@ -1,5 +1,10 @@
 #Question Advice (Implemented only for Review, Metareview, Authorfeedback and TeammateReview)
 
+advice0:     
+ question_id: <%= Fixtures.identify(:question5)%>     
+ score: 2     
+ advice: Good
+
 advice1:
  question_id: <%= Fixtures.identify(:question1)%>
  score: 1
