@@ -39,11 +39,11 @@ class UsersControllerTest < ActionController::TestCase
       :fullname => "new Student1test",
       :email => "student1test@foo.edu"}
     updatedUser = User.find_by_name("student1")
-    assert_equal updatedUser.email, "student1@foo.edu"
+    assert_equal updatedUser.email, "student1test@foo.edu"
 #   assert_nil User.find(:first, :conditions => "name='#{@user.name}'")
-    assert_response :success
-    # assert_equal 'User was successfully updated.', flash[:notice]
-    # assert_redirected_to :action => 'show', :id => @testUser
+    assert_response :redirect
+    assert_equal 'User was successfully updated.', flash[:notice]
+    assert_redirected_to :action => 'show', :id => @testUser
   end
   
   # 202 edit a user name to an invalid name (e.g. blank)
