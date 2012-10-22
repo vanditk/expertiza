@@ -769,11 +769,16 @@ end
 
     self.response_maps.each do |response_map|
       if !response_map.response.nil? then
-        sum_of_scores = sum_of_scores + response_map.response.get_average_score
+        #modified . Vandit.
+        sum_of_scores = sum_of_scores + response_map.response.get_total_score
       end
     end
+    if (get_total_reviews_completed !=0)
+     return (sum_of_scores / get_total_reviews_completed).to_i
 
-    (sum_of_scores / get_total_reviews_completed).to_i
+    else
+          return 0;
+      end
   end
 
   def get_score_distribution
@@ -781,7 +786,9 @@ end
     
     self.response_maps.each do |response_map|
       if !response_map.response.nil? then
-        score = response_map.response.get_average_score.to_i
+        #modified. Vandit.
+        #score = response_map.response.get_total_score.to_i
+        score = get_average_score
         distribution[score] += 1 if score >= 0 and score <= 100
       end
     end

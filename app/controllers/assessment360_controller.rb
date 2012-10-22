@@ -10,6 +10,8 @@ class Assessment360Controller < ApplicationController
     puts "inside one course all assignment"
     #@REVIEW_TYPES = ["ParticipantReviewResponseMap", "FeedbackResponseMap", "TeammateReviewResponseMap", "MetareviewResponseMap"]
     @REVIEW_TYPES = ["TeammateReviewResponseMap"]
+    #@course = Course.find_by_id(18714240)
+    #@course = Course.find(:all).first
     @course = Course.find_by_id(params[:course_id])
     @assignments = Assignment.find_all_by_course_id(@course)
     @assignments.reject! {|assignment| assignment.get_total_reviews_assigned_by_type(@REVIEW_TYPES.first) == 0 }
@@ -20,70 +22,82 @@ class Assessment360Controller < ApplicationController
 
     @assignments.each do |assignment|
       # Pie Chart Data .....................................
-      reviewed = assignment.get_percentage_reviews_completed()
-      pending = 100 - reviewed
-      reviewed_msg = reviewed.to_s + "% reviewed"
-      pending_msg = pending.to_s + "% pending"
-
-      GoogleChart::PieChart.new('160x100'," ",false) do |pc|
-        pc.data_encoding = :extended
-        pc.data reviewed_msg, reviewed, '228b22' # want to write '20' responed
-        pc.data pending_msg, pending, 'ff0000' # rest of the class
-
-        # Pie Chart with labels
-        pc.show_labels = false
-        pc.show_legend = true
-        @assignment_pie_charts[assignment] = (pc.to_url)
-      end
+      generatepiechartforassignment(assignment)
 
       # bar chart data ................................
-      bar_1_data = Array.new
-      dates = Array.new
-      date = assignment.created_at.to_datetime.to_date
-
-      while ((date <=> Date.today) <= 0)
-        if assignment.get_total_reviews_completed_by_type_and_date(@REVIEW_TYPES.first, date) != 0 then
-          bar_1_data.push(assignment.get_total_reviews_completed_by_type_and_date(@REVIEW_TYPES.first, date))
-          dates.push(date.month.to_s + "-" + date.day.to_s)
-        end
-
-        date = (date.to_datetime.advance(:days => 1)).to_date
-      end
-
-      color_1 = 'c53711'
-      min=0
-      max= assignment.get_total_reviews_assigned
-
-      GoogleChart::BarChart.new("600x80", " ", :vertical, false) do |bc|
-        bc.data "Review", bar_1_data, color_1
-        bc.axis :y, :positions => [min, max], :range => [min,max]
-        bc.axis :x, :labels => dates
-        bc.show_legend = false
-        bc.stacked = false
-        bc.data_encoding = :extended
-        bc.params.merge!({:chl => "Nov"})
-        @assignment_bar_charts[assignment] = (bc.to_url)
-      end
+      generatebarchartforassignment(assignment)
       
       # Histogram score distribution .......................
-      bar_2_data = assignment.get_score_distribution
-      color_2 = '4D89F9'
-      min = 0
-      max = 100
+      generatehistogramforassignment(assignment)
+    end
+  end
 
-      p '======================='
-      p bar_2_data
-      GoogleChart::BarChart.new("130x100", " ", :vertical, false) do |bc|
-        bc.data "Review", bar_2_data, color_2
-        bc.axis :y, :positions => [0, bar_2_data.max], :range => [0, bar_2_data.max]
-        bc.axis :x, :positions => [min, max], :range => [min,max]
-        bc.width_spacing_options :bar_width => 1, :bar_spacing => 0, :group_spacing => 0
-        bc.show_legend = false
-        bc.stacked = false
-        bc.data_encoding = :extended
-        bc.params.merge!({:chl => "Nov"})
-        @assignment_distribution[assignment] = (bc.to_url)
+  def generatehistogramforassignment(assignment)
+    bar_2_data = assignment.get_score_distribution
+    color_2 = '4D89F9'
+    min = 0
+    max = 100
+
+    p '======================='
+    p bar_2_data
+    GoogleChart::BarChart.new("130x100", " ", :vertical, false) do |bc|
+      bc.data "Review", bar_2_data, color_2
+      bc.axis :y, :positions => [0, bar_2_data.max], :range => [0, bar_2_data.max]
+      bc.axis :x, :positions => [min, max], :range => [min, max]
+      bc.width_spacing_options :bar_width => 1, :bar_spacing => 0, :group_spacing => 0
+      bc.show_legend = false
+      bc.stacked = false
+      bc.data_encoding = :extended
+      bc.params.merge!({:chl => "Nov"})
+      @assignment_distribution[assignment] = (bc.to_url)
+    end
+  end
+
+  def generatebarchartforassignment(assignment)
+    bar_1_data = Array.new
+    dates = Array.new
+    date = assignment.created_at.to_datetime.to_date
+
+    while ((date <=> Date.today) <= 0)
+      if assignment.get_total_reviews_completed_by_type_and_date(@REVIEW_TYPES.first, date) != 0 then
+        bar_1_data.push(assignment.get_total_reviews_completed_by_type_and_date(@REVIEW_TYPES.first, date))
+        dates.push(date.month.to_s + "-" + date.day.to_s)
       end
+
+      date = (date.to_datetime.advance(:days => 1)).to_date
+    end
+
+    color_1 = 'c53711'
+    min=0
+    max= assignment.get_total_reviews_assigned
+
+    GoogleChart::BarChart.new("600x80", " ", :vertical, false) do |bc|
+      bc.data "Review", bar_1_data, color_1
+      bc.axis :y, :positions => [min, max], :range => [min, max]
+      bc.axis :x, :labels => dates
+      bc.show_legend = false
+      bc.stacked = false
+      bc.data_encoding = :extended
+      bc.params.merge!({:chl => "Nov"})
+      @assignment_bar_charts[assignment] = (bc.to_url)
+    end
+  end
+
+  def generatepiechartforassignment(assignment)
+    reviewed = assignment.get_percentage_reviews_completed()
+    pending = 100 - reviewed
+    reviewed_msg = reviewed.to_s + "% reviewed"
+    pending_msg = pending.to_s + "% pending"
+
+    GoogleChart::PieChart.new('160x100', " ", false) do |pc|
+      pc.data_encoding = :extended
+      pc.data reviewed_msg, reviewed, '228b22' # want to write '20' responed
+      pc.data pending_msg, pending, 'ff0000' # rest of the class
+
+      # Pie Chart with labels
+      pc.show_labels = false
+      pc.show_legend = true
+      @assignment_pie_charts[assignment] = (pc.to_url)
     end
   end
 
@@ -150,62 +164,70 @@ class Assessment360Controller < ApplicationController
     colors << 'ff000f'
     min = 0
     max = 100
-    GoogleChart::BarChart.new("600x350"," ",:horizontal,false) do |bc|
-     bc.data " ", [100], 'ffffff'
-     bc.axis :x, :range => [min,max]
-     i = 0
-     @assignments.each do |assignment|
-       assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
-       if  !assignment_participant.nil?
-       teammate_scores = assignment_participant.get_teammate_reviews()
-       meta_scores = assignment_participant.get_metareviews()
-       j = 1.to_i
-       average = 0;
-       if !teammate_scores.nil?
-         teammate_scores.each do |teammate_score|
-            average = average +   teammate_score.get_average_score
-            bc.data assignment.name.to_s + ", Scores: " + teammate_score.get_average_score.to_s, [teammate_score.get_average_score], colors[i]
-            j = j + 1
-         end
-         if( (j-1).to_i > 0)
-            average = average.to_i / (j-1).to_i
-            bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
-         end
-       end
-       i = i +1
-     end
-     puts "\nBar Chart"
-     @bc= bc.to_url
-     end
-    end
+    generatebarchartforteammatescore(colors, max, min)
 
-     GoogleChart::BarChart.new("600x350"," ",:horizontal,false) do |bc|
-     bc.data " ", [100], 'ffffff'
-     bc.axis :x, :range => [min,max]
-     i = 0
-     @assignments.each do |assignment|
-       assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
-       if  !assignment_participant.nil?
-       meta_scores = assignment_participant.get_metareviews()
-       j = 1.to_i
-       average = 0;
-       if !meta_scores.nil?
-         meta_scores.each do |meta_score|
-            average = average +   meta_score.get_average_score
-            bc.data assignment.name.to_s + ", Scores ".to_s +  meta_score.get_average_score.to_s, [meta_score.get_average_score], colors[i]
-            j = j + 1
-         end
-        if( (j-1).to_i > 0)
-            average = average.to_i / (j-1).to_i
-            bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+    generatebarchartformetareviewscore(colors, max, min)
+  end
+
+  def generatebarchartformetareviewscore(colors, max, min)
+    GoogleChart::BarChart.new("600x350", " ", :horizontal, false) do |bc|
+      bc.data " ", [100], 'ffffff'
+      bc.axis :x, :range => [min, max]
+      i = 0
+      @assignments.each do |assignment|
+        assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
+        if  !assignment_participant.nil?
+          meta_scores = assignment_participant.get_metareviews()
+          j = 1.to_i
+          average = 0;
+          if !meta_scores.nil?
+            meta_scores.each do |meta_score|
+              average = average + meta_score.get_average_score
+              bc.data assignment.name.to_s + ", Scores ".to_s + meta_score.get_average_score.to_s, [meta_score.get_average_score], colors[i]
+              j = j + 1
+            end
+            if ((j-1).to_i > 0)
+              average = average.to_i / (j-1).to_i
+              bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+            end
+
+          end
+          i = i +1
         end
+        puts "\nBar Chart"
+        @mt= bc.to_url
+      end
+    end
+  end
 
-       end
-       i = i +1
-     end
-     puts "\nBar Chart"
-     @mt= bc.to_url
-     end
+  def generatebarchartforteammatescore(colors, max, min)
+    GoogleChart::BarChart.new("600x350", " ", :horizontal, false) do |bc|
+      bc.data " ", [100], 'ffffff'
+      bc.axis :x, :range => [min, max]
+      i = 0
+      @assignments.each do |assignment|
+        assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
+        if  !assignment_participant.nil?
+          teammate_scores = assignment_participant.get_teammate_reviews()
+          meta_scores = assignment_participant.get_metareviews()
+          j = 1.to_i
+          average = 0;
+          if !teammate_scores.nil?
+            teammate_scores.each do |teammate_score|
+              average = average + teammate_score.get_average_score
+              bc.data assignment.name.to_s + ", Scores: " + teammate_score.get_average_score.to_s, [teammate_score.get_average_score], colors[i]
+              j = j + 1
+            end
+            if ((j-1).to_i > 0)
+              average = average.to_i / (j-1).to_i
+              bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+            end
+          end
+          i = i +1
+        end
+        puts "\nBar Chart"
+        @bc= bc.to_url
+      end
     end
   end
 

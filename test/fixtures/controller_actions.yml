@@ -343,3 +343,46 @@ controller_action_leaderboard_index:
   name: 'index' 
   permission_id:  
   url_to_use: ''
+
+
+controller_action_assessment360_one_course_all_assignments:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'one_course_all_assignments'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'one_course_all_assignments'
+
+controller_action_assessment360_one_student_all_reviews:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'one_student_all_reviews'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'one_student_all_reviews'
+
+controller_action_assessment360_one_assignment_all_students:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'one_assignment_all_students'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'one_assignment_all_students'
+
+controller_action_assessment360_all_assignments_all_students:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'all_assignments_all_students'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'all_assignments_all_students'
+
+controller_action_assessment360_one_student_all_reviews:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'one_student_all_reviews'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'one_student_all_reviews'
+
+controller_action_assessment360_one_assignment_one_student:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'one_assignment_one_student'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'one_assignment_one_student'
+
+controller_action_assessment360_all_students_all_reviews:
+  site_controller_id: <%= Fixtures.identify(:site_controller_assessment360) %>
+  name: 'all_students_all_reviews'
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+  url_to_use: 'all_students_all_reviews'

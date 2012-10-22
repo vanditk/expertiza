@@ -182,3 +182,9 @@ site_controller_delete_object:
   name: 'delete_object' 
   builtin: 0 
   permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
+
+
+site_controller_assessment360:
+  name: 'assessment360'
+  builtin: 1
+  permission_id: <%= Fixtures.identify(:permission_administer_assignments) %>
