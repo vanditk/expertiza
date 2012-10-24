@@ -24,14 +24,14 @@ test: &test
   adapter: mysql
   database: pg_test
   username: root
-  password: zenk285
+  password:
   host: localhost
 
 production:
   adapter: mysql
   database: pg_development
   username: root
-  password: zenk285
+  password:
   host: localhost
 
 cucumber:
