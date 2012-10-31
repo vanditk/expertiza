@@ -10,8 +10,6 @@ class Assessment360Controller < ApplicationController
     puts "inside one course all assignment"
     #@REVIEW_TYPES = ["ParticipantReviewResponseMap", "FeedbackResponseMap", "TeammateReviewResponseMap", "MetareviewResponseMap"]
     @REVIEW_TYPES = ["TeammateReviewResponseMap"]
-    #@course = Course.find_by_id(18714240)
-    #@course = Course.find(:all).first
     @course = Course.find_by_id(params[:course_id])
     @assignments = Assignment.find_all_by_course_id(@course)
     @assignments.reject! {|assignment| assignment.get_total_reviews_assigned_by_type(@REVIEW_TYPES.first) == 0 }
@@ -21,18 +19,20 @@ class Assessment360Controller < ApplicationController
     @assignment_distribution  = Hash.new
 
     @assignments.each do |assignment|
-      # Pie Chart Data .....................................
+      # Prepare Pie Chart Data .....................................
       generatepiechartforassignment(assignment)
 
-      # bar chart data ................................
+      # Prepare bar chart data ................................
       generatebarchartforassignment(assignment)
       
-      # Histogram score distribution .......................
+      # Prepare  Histogram score distribution .......................
       generatehistogramforassignment(assignment)
     end
   end
 
+  #Method to Prepare a Histogram.
   def generatehistogramforassignment(assignment)
+
     bar_2_data = assignment.get_score_distribution
     color_2 = '4D89F9'
     min = 0
@@ -52,7 +52,7 @@ class Assessment360Controller < ApplicationController
       @assignment_distribution[assignment] = (bc.to_url)
     end
   end
-
+  #Method to Prepare a Bar Chart.
   def generatebarchartforassignment(assignment)
     bar_1_data = Array.new
     dates = Array.new
@@ -82,7 +82,7 @@ class Assessment360Controller < ApplicationController
       @assignment_bar_charts[assignment] = (bc.to_url)
     end
   end
-
+  #Method to Prepare a Pie Chart.
   def generatepiechartforassignment(assignment)
     reviewed = assignment.get_percentage_reviews_completed()
     pending = 100 - reviewed
@@ -164,11 +164,14 @@ class Assessment360Controller < ApplicationController
     colors << 'ff000f'
     min = 0
     max = 100
+    # Prepare Bar Chart for teammate reviews scores .....................................
     generatebarchartforteammatescore(colors, max, min)
-
+    # Prepare Bar Chart Data for metareview scores.....................................
     generatebarchartformetareviewscore(colors, max, min)
   end
 
+
+  #Method to Prepare a bar chart for metareview scores.
   def generatebarchartformetareviewscore(colors, max, min)
     GoogleChart::BarChart.new("600x350", " ", :horizontal, false) do |bc|
       bc.data " ", [100], 'ffffff'
@@ -186,6 +189,7 @@ class Assessment360Controller < ApplicationController
               bc.data assignment.name.to_s + ", Scores ".to_s + meta_score.get_average_score.to_s, [meta_score.get_average_score], colors[i]
               j = j + 1
             end
+
             if ((j-1).to_i > 0)
               average = average.to_i / (j-1).to_i
               bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
@@ -200,6 +204,8 @@ class Assessment360Controller < ApplicationController
     end
   end
 
+  #Method to Prepare a bar chart for teammate review scores.
+
   def generatebarchartforteammatescore(colors, max, min)
     GoogleChart::BarChart.new("600x350", " ", :horizontal, false) do |bc|
       bc.data " ", [100], 'ffffff'
@@ -212,16 +218,22 @@ class Assessment360Controller < ApplicationController
           meta_scores = assignment_participant.get_metareviews()
           j = 1.to_i
           average = 0;
+
           if !teammate_scores.nil?
             teammate_scores.each do |teammate_score|
-              average = average + teammate_score.get_average_score
+              #average = average + teammate_score.get_average_score
               bc.data assignment.name.to_s + ", Scores: " + teammate_score.get_average_score.to_s, [teammate_score.get_average_score], colors[i]
-              j = j + 1
+              #j = j + 1
             end
+=begin
             if ((j-1).to_i > 0)
               average = average.to_i / (j-1).to_i
               bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
             end
+=end
+            average = calculate_average_score(teammate_scores)
+            bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+
           end
           i = i +1
         end
@@ -229,6 +241,19 @@ class Assessment360Controller < ApplicationController
         @bc= bc.to_url
       end
     end
+  end
+
+  def calculate_average_score(teammate_scores)
+    j=0
+    average = 0
+    teammate_scores.each do |teammate_score|
+      average = average + teammate_score.get_average_score
+
+    end
+    if ((j).to_i > 0)
+      average = average.to_i / (j).to_i
+    end
+    average
   end
 
   def one_assignment_one_student
