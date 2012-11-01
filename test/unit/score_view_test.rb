@@ -19,3 +19,5 @@ def test_scores_view
   end
 end
 
+end
+

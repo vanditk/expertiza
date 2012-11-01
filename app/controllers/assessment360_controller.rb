@@ -181,19 +181,21 @@ class Assessment360Controller < ApplicationController
         assignment_participant = assignment.participants.find_by_user_id(@current_student.user_id)
         if  !assignment_participant.nil?
           meta_scores = assignment_participant.get_metareviews()
-          j = 1.to_i
+          #j = 1.to_i
           average = 0;
           if !meta_scores.nil?
             meta_scores.each do |meta_score|
-              average = average + meta_score.get_average_score
+              #average = average + meta_score.get_average_score
               bc.data assignment.name.to_s + ", Scores ".to_s + meta_score.get_average_score.to_s, [meta_score.get_average_score], colors[i]
-              j = j + 1
+              #j = j + 1
             end
 
-            if ((j-1).to_i > 0)
-              average = average.to_i / (j-1).to_i
-              bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
-            end
+            #if ((j-1).to_i > 0)
+            #  average = average.to_i / (j-1).to_i
+            #  bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
+            #end
+            average= calculate_average_score(meta_scores)
+            bc.data assignment.name.to_s + ", Average: "+ average.to_s, [average], '000000'
 
           end
           i = i +1
@@ -243,11 +245,12 @@ class Assessment360Controller < ApplicationController
     end
   end
 
-  def calculate_average_score(teammate_scores)
+  #method to generate average scores.
+  def calculate_average_score(scores)
     j=0
     average = 0
-    teammate_scores.each do |teammate_score|
-      average = average + teammate_score.get_average_score
+    scores.each do |score|
+      average = average + score.get_average_score
 
     end
     if ((j).to_i > 0)

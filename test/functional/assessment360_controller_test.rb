@@ -3,6 +3,8 @@
 require 'test_helper'
 
 
+#Functional tests for Assessment360Controller.
+
 class Assessment360ControllerTest < ActionController::TestCase
   fixtures :users, :roles, :system_settings, :content_pages,:participants
   fixtures :permissions, :roles_permissions, :controller_actions
@@ -21,7 +23,7 @@ class Assessment360ControllerTest < ActionController::TestCase
   end
 
   test "should get one course all assignments" do
-    #get :one_course_all_assignments, :course_id => courses(:course_e_commerce).id
+
     get(:one_course_all_assignments, {:course_id => courses(:course1).id})
     assert_response :success
 
@@ -69,8 +71,6 @@ class Assessment360ControllerTest < ActionController::TestCase
   end
 
   test "one_assignment_one_student fail" do
-    #@assignment = Assignment.find_by_id(params[:assignment_id])
-    #@participant = Participant.find_by_user_id(params[:user_id])
     @request.session[:user] = users(:student1)
     Role.rebuild_cache
     AuthController.set_current_role(users(:student1).role_id,@request.session)
@@ -80,8 +80,6 @@ class Assessment360ControllerTest < ActionController::TestCase
   end
 
   test "one_student_all_reviews fail" do
-    #@assignment = Assignment.find_by_id(params[:assignment_id])
-    #@participant = Participant.find_by_user_id(params[:user_id])
     @request.session[:user] = users(:student1)
     Role.rebuild_cache
     AuthController.set_current_role(users(:student1).role_id,@request.session)
@@ -91,8 +89,6 @@ class Assessment360ControllerTest < ActionController::TestCase
   end
 
   test "all_assignments_all_students fail" do
-    #@assignment = Assignment.find_by_id(params[:assignment_id])
-    #@participant = Participant.find_by_user_id(params[:user_id])
     @request.session[:user] = users(:student1)
     Role.rebuild_cache
     AuthController.set_current_role(users(:student1).role_id,@request.session)
@@ -103,8 +99,6 @@ class Assessment360ControllerTest < ActionController::TestCase
 
 
   test "one_course_all_assignments fail" do
-    #@assignment = Assignment.find_by_id(params[:assignment_id])
-    #@participant = Participant.find_by_user_id(params[:user_id])
     @request.session[:user] = users(:student1)
     Role.rebuild_cache
     AuthController.set_current_role(users(:student1).role_id,@request.session)
