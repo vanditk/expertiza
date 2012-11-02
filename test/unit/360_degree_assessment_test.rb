@@ -7,7 +7,7 @@ class Assessment360DegreeTest < ActiveSupport::TestCase
     @assessment_controller = Assessment360Controller.new
   end
 
-  def test_database_returns_review_mappings_in_order_of_creation_and_uses_sequential_ids
+  def test_average
 
       #j = 1.to_i
       average = 0;
