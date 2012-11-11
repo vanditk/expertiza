@@ -12,6 +12,7 @@
 
     // Global Variables for sharing data between Javascript functions.
     var file_id;
+    var participant_id = <%= @participant.user_id %>;
     var comment_offset;
     var highlight_cell_id;
     var multipleSelection=false;
@@ -34,7 +35,8 @@
             parameters: {
                 file_id :file_id,
                 file_offset :comment_offset,
-                comment_content :commentText.value
+                comment_content :commentText.value,
+                participant_id: participant_id
             }
         });
         // Highlight the table cell (containing the line number) just clicked
@@ -132,6 +134,7 @@
             parameters: {
                 file_id: fileId,
                 file_offset: offset
+
             },
             onSuccess: function(return_value) {
                 var all_comments = return_value.responseText ?

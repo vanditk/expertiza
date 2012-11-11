@@ -294,9 +294,19 @@ class ReviewFilesController < ApplicationController
     @comment = ReviewComment.new
     @comment.review_file_id = params[:file_id]
     @comment.file_offset = params[:file_offset]
-    @comment.comment_content = params[:comment_content].gsub("\n", " ")
-    @comment.reviewer_participant_id = AssignmentParticipant.find_by_user_id(
-        session[:user].id).id
+
+    assignmentparticipant = AssignmentParticipant.find_by_user_id(session[:user].id)
+    #modified to add the comment's author.
+    if session[:user].id.to_s == (params[:participant_id])
+
+      handle = "Author"+assignmentparticipant.id.to_s
+    else
+
+      handle = "Reviewer"+assignmentparticipant.id.to_s
+    end
+
+    @comment.reviewer_participant_id = assignmentparticipant.id
+    @comment.comment_content = handle+": " + params[:comment_content].gsub("\n", " ")
     @comment.save
   end
 
