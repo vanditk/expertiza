@@ -294,9 +294,11 @@ class ReviewFilesController < ApplicationController
     @comment = ReviewComment.new
     @comment.review_file_id = params[:file_id]
     @comment.file_offset = params[:file_offset]
-
+    @comment.last_line_number = params[:last_line]
+    @comment.initial_line_number = params[:first_line]
     assignmentparticipant = AssignmentParticipant.find_by_user_id(session[:user].id)
     #modified to add the comment's author.
+=begin
     if session[:user].id.to_s == (params[:participant_id])
 
       handle = "Author"+assignmentparticipant.id.to_s
@@ -304,18 +306,71 @@ class ReviewFilesController < ApplicationController
 
       handle = "Reviewer"+assignmentparticipant.id.to_s
     end
+=end
 
     @comment.reviewer_participant_id = assignmentparticipant.id
-    @comment.comment_content = handle+": " + params[:comment_content].gsub("\n", " ")
+    @comment.comment_content = params[:comment_content].gsub("\n", " ")
     @comment.save
   end
+
+  # modified vandit.
+
+  # Needs params[:file_id], params[:file_offset]
+  def get_bookmarks
+    all_bookmark_contents = []
+    all_bookmark_contents = ReviewComment.find_by_review_file_id(
+        params[:file_id])
+
+    comments_in_table = ReviewCommentsHelper::construct_bookmarks_table(all_bookmark_contents)
+
+=begin
+    .each { |comment|
+
+      assignmentparticipant = AssignmentParticipant.find_by_user_id(session[:user].id)
+      #modified to add the comment's author.
+      if session[:user].id.to_s == (params[:participant_id])
+
+        handle = "Author"+assignmentparticipant.id.to_s
+      else
+
+        handle = "Reviewer"+assignmentparticipant.id.to_s
+      end
+=end
+
+
+
+      #all_comment_contents << handle+": "+comment.comment_content.gsub("\n", " ")
+    #}
+    #comments_in_table = ReviewCommentsHelper::construct_comments_table(all_comment_contents)
+
+    respond_to do |format|
+      format.js { render :json => comments_in_table }
+    end
+  end
+
+
+
+
 
   # Needs params[:file_id], params[:file_offset]
   def get_comments
     all_comment_contents = []
     ReviewComment.find_all_by_review_file_id_and_file_offset(
         params[:file_id], params[:file_offset]).each { |comment|
-      all_comment_contents << comment.comment_content.gsub("\n", " ")
+
+      assignmentparticipant = AssignmentParticipant.find_by_user_id(session[:user].id)
+      #modified to add the comment's author.
+      if session[:user].id.to_s == (params[:participant_id])
+
+        handle = "Author"+assignmentparticipant.id.to_s
+      else
+
+        handle = "Reviewer"+assignmentparticipant.id.to_s
+      end
+
+
+
+      all_comment_contents << handle+": "+comment.comment_content.gsub("\n", " ")
     }
     comments_in_table = ReviewCommentsHelper::construct_comments_table(
         all_comment_contents)

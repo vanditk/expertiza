@@ -11,13 +11,15 @@
 <script type="text/javascript">
 
     // Global Variables for sharing data between Javascript functions.
+    isMinSelected = false;
     var file_id;
     var participant_id = <%= @participant.user_id %>;
     var comment_offset;
     var highlight_cell_id;
     var multipleSelection=false;
     var noCommentsHtml = "<br/><font style=\"color: #7a7a7a;\">No Comments yet</font>";
-
+     var mintd;
+    var maxtd;
     /**
      * Sends the comment content corresponding to the file offset indicated by
      * global variable 'comment_offset' to the controller submit_comment which
@@ -36,7 +38,9 @@
                 file_id :file_id,
                 file_offset :comment_offset,
                 comment_content :commentText.value,
-                participant_id: participant_id
+                participant_id: participant_id,
+                first_line: mintd,
+                last_line: maxtd
             }
         });
         // Highlight the table cell (containing the line number) just clicked
@@ -63,6 +67,50 @@
                 "src='/images/tree_view/delete-icon-16.png' alt='Icon'></a><br>";
     }
 
+    //added . Vandit.---------------------------------------------------------------------------------------------------------------
+    function checkMouseDown(event,id) {
+
+
+
+
+        alert(id);
+       // var tdElement = document.getElementById(id);
+       // tdElement.setAttribute('bgcolor','purple');
+        if(!isMinSelected)
+        {
+            isMinSelected = true;
+            alert('min selected');
+            var tdElement = document.getElementById(id);
+            tdElement.setAttribute('bgcolor','purple');
+            mintd = id;
+            //select this cell--initial
+            return false;
+        }
+        else
+        {
+            alert('max selected');
+            maxtd = id;
+            //select this cell--initial
+            isMinSelected = false;
+            if(maxtd<mintd)
+            {
+                temp = maxtd;
+                maxtd = mintd;
+                mintd = temp;
+            }
+
+            for (var i = mintd;i<=maxtd;i++){
+                var tdElement = document.getElementById(i);
+                if(tdElement != null || tdElement != undefined )
+                {
+                tdElement.setAttribute('bgcolor','purple');
+                }
+            }
+            return true;
+        }
+
+
+    }
     /** HELPER METHOD
      * Constructs a header indicating the line number corresponding to the
      * comment(s) displayed in the comment Window.
@@ -89,7 +137,9 @@
             method: 'get',
             parameters: {
                 file_id: fileId,
-                file_offset: offset
+                file_offset: offset,
+
+                participant_id: participant_id
             },
             onSuccess: function(return_value) {
                 var all_comments = return_value.responseText ?
@@ -133,8 +183,8 @@
             method: 'get',
             parameters: {
                 file_id: fileId,
-                file_offset: offset
-
+                file_offset: offset,
+                participant_id: participant_id
             },
             onSuccess: function(return_value) {
                 var all_comments = return_value.responseText ?
@@ -210,6 +260,11 @@
         height:440px;
     }
 
+    #bookmarks{
+        border:1;
+        width:100%;
+        height:440px;
+    }
     #version_header{
         border:1;
         width:100%;
@@ -367,6 +422,15 @@
 
   <br/>
 
+  <!-- modified vandit. -->
+  <table align = "left">
+    <colgroup>
+      <col width="70%">
+      <col width="30%">
+    </colgroup>
+    <tr>
+
+      <td>
 
 
   <!--  THE DIV OF THE TABLE -->
@@ -379,7 +443,7 @@
           <% line2color = "lightgreen"%>
           <% line2_font_weight = "normal" %>
 
-          <tr bgcolor="<%=@color%>" class="highlight">
+          <tr bgcolor="<%=@color%>" class="highlight" >
 
 
             <!-- If map contains an entry for this line number then there exists -->
@@ -393,12 +457,16 @@
             <!-- Allow commenting on code file only if this is the most recent version -->
             <!-- AND if current user is reviewer (i.e. != author/author's team) -->
             <% if @shareObj['linearray2'][i].blank? %>
-                <td width="4%" id="td_new_<%=i%>" bgcolor="<%=line2color%>" style=" font-weight: <%= line2_font_weight %> ; border-right: thin solid black; vertical-align: top;">
+                <td width="4%" id="td_new_<%=i%>" bgcolor="<%=line2color%>" style=" font-weight: <%= line2_font_weight %> ; border-right: thin solid black; vertical-align: top;" onclick="checkMouseDown(event,id)">
                   <a class="line_number line_number_hover" style="display:block;" href="javascript:void(0)" ><u> <pre><%=(i+1)%></pre></u></a></td>
             <% elsif @current_review_file.version_number.to_i == file_versions.sort[-1] and session[:user].id != @participant.user_id %>
-                <td width="4%" id="<%=i%>" bgcolor="<%=line2color%>" style=" font-weight: <%= line2_font_weight %> ;  border-right: thin solid black; vertical-align: top;"><a class="line_number line_number_hover" style="display:block;" href="javascript:void(0)" onclick="createComments('<%= i %>', '<%= (i+1) %>', '<%=@shareObj['offsetarray2'][i]%>', '<%=@current_review_file.id %>')"><u> <pre><%= (i+1) %></pre></u></a></td>
+                <td width="4%" id="<%=i%>" bgcolor="<%=line2color%>" style=" font-weight: <%= line2_font_weight %> ;  border-right: thin solid black; vertical-align: top;"  onclick="if(checkMouseDown(event,id)){ createComments('<%= (i) %>','<%= (i+1) %>', '<%=@shareObj['offsetarray2'][i]%>', '<%=@current_review_file.id %>')}">
+                  <a class="line_number line_number_hover" style="display:block;" href="javascript:void(0)"> <u> <pre><%= (i+1) %></pre></u></a>
+                </td>
             <% else %>
-                <td width="4%" id="<%=i%>" bgcolor="<%=line2color%>" style=" font-weight: <%= line2_font_weight %> ;  border-right: thin solid black; vertical-align: top;"><a class="line_number line_number_hover" style="display:block;" href="javascript:void(0)" onclick="createComments('<%= (i) %>','<%= (i+1) %>', '<%=@shareObj['offsetarray2'][i]%>', '<%=@current_review_file.id %>')"><u> <pre><%= (i+1) %></pre></u></a></td>
+                <td width="4%" id="<%=i%>" bgcolor="<%=line2color%>" style=" font-weight: <%= line2_font_weight %> ;  border-right: thin solid black; vertical-align: top;"  onclick="if(checkMouseDown(event,id)){ createComments('<%= (i) %>','<%= (i+1) %>', '<%=@shareObj['offsetarray2'][i]%>', '<%=@current_review_file.id %>')}"  >
+                  <a class="line_number line_number_hover" style="display:block;" href="javascript:void(0)" ><u> <pre><%= (i+1) %></pre></u></a>
+                  </td>
             <% end %>
 
             <td width="1%"></td>
@@ -411,6 +479,27 @@
       <%end%>
     </table>
   </div>
+
+      </td>
+      <td>
+  <div id="bookmarks" class="margin" style= "border: thin solid;  overflow: auto; border-width: 1px;">
+
+    <table>
+      <tr>
+      <td> hi</td>
+      </tr>
+
+
+    </table>
+
+  </div>
+
+      </td>
+
+    </tr>
+
+  </table>
+
 
   <br/><br/><%= link_to "<< Back to File Listing", :controller => 'review_files',
                         :action => 'show_all_submitted_files',

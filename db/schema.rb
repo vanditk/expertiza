@@ -303,6 +303,9 @@ ActiveRecord::Schema.define(:version => 20111217162506) do
     t.integer  "file_offset"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer "initial_line_number"
+    t.integer "last_line_number"
+
   end
 
   create_table "review_files", :force => true do |t|
